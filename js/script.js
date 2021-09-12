@@ -98,14 +98,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // modal
 
     const modalTrigger = document.querySelectorAll('[data-modal]'),
-          modal = document.querySelector('.modal'),
-          modalCloseBtn = document.querySelector('[data-close]');
+          modal = document.querySelector('.modal');
 
     modalTrigger.forEach((elem, i) =>{
         elem.addEventListener('click', openModal);
     });
 
-    modalCloseBtn.addEventListener('click', closeModal);
+   // modalCloseBtn.addEventListener('click', closeModal);
 
     function openModal(){
         modal.classList.add('show');
@@ -120,7 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     modal.addEventListener('click', (event) =>{
         console.dir(event.key);
-        if(event.target == modal){
+        if(event.target == modal || event.target.getAttribute('data-close') == ""){
             closeModal();
         }
     });
@@ -210,4 +209,90 @@ document.addEventListener('DOMContentLoaded', () => {
         28,
         '.menu__field > .container'
     ).render();
+
+    //forms
+
+    const forms = document.querySelectorAll('form');
+
+    const message = {
+        loading: 'spinner.svg',
+        succsess: 'Спасибо, мы с вами свяжемся',
+        failure: 'Что-то пощло не так...'
+    }    
+
+    forms.forEach(item => {
+        postData(item);
+    });
+
+    function postData(form){
+        form.addEventListener('submit',  (e) => {
+            e.preventDefault();
+
+            const statusMessage = document.createElement('img');
+            statusMessage.setAttribute('src', message.loading);
+            statusMessage.style.cssText =`
+                display: block;
+                margin: 0 auto;
+            `;  
+            //statusMessage.textContent = message.loading;
+            
+            form.insertAdjacentElement('afterend', statusMessage);
+
+            
+            
+           
+
+            const formData = new FormData(form);
+
+            const object = {};
+            formData.forEach(function(value, key){
+                object[key] = value;
+            });
+
+            fetch('server.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(object)
+            }).then(data => data.text())
+            .then(data => {
+                showThanksModal(message.succsess);
+                statusMessage.remove();
+            }).catch(() => {
+                showThanksModal(message.failure);
+            }).finally(() => {
+                form.reset();
+            });
+
+            
+        });
+    }
+    function showThanksModal(message){
+        const prevModalDialog = document.querySelector('.modal__dialog');
+        console.log("STM");
+        console.log(message);
+
+        //prevModalDialog.classList.remove('show');
+        prevModalDialog.classList.add('hide');
+
+        openModal();
+
+        const thanksModal = document.createElement('div');
+        thanksModal.classList.add('modal__dialog');
+        thanksModal.innerHTML = `
+            <div class="modal__content">
+                <div class="modal__close" data-close>x</div>
+                <div class="modal__title">${message}</div>
+            </div>
+        `;
+        document.querySelector('.modal').append(thanksModal);
+        setTimeout(() => {
+            thanksModal.remove();
+            //prevModalDialog.classList.add('show');
+            prevModalDialog.classList.remove('hide');
+            closeModal();
+        }, 4000);
+    }
+    
 });

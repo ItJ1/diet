@@ -221,12 +221,24 @@ document.addEventListener('DOMContentLoaded', () => {
     }    
 
     forms.forEach(item => {
-        postData(item);
+        bindPostData(item);
     });
 
-    function postData(form){
+    const postData = async (url, data) => {
+        const res = await fetch(url,{
+            method: "POST",
+            headers: {
+                'Content-type': 'application/json'
+            },
+            body: data
+        });
+        return await res.json();
+
+    };
+
+    function bindPostData(form){
         form.addEventListener('submit',  (e) => {
-            e.preventDefault();
+            e.preventDefault(); 
 
             const statusMessage = document.createElement('img');
             statusMessage.setAttribute('src', message.loading);
@@ -244,19 +256,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const formData = new FormData(form);
 
-            const object = {};
-            formData.forEach(function(value, key){
-                object[key] = value;
-            });
+            const json = JSON.stringify(Object.fromEntries(formData.entries()));
 
-            fetch('server.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(object)
-            }).then(data => data.text())
+            
+            postData('http://localhost:3001/requests', json)
             .then(data => {
+                console.log(data);
                 showThanksModal(message.succsess);
                 statusMessage.remove();
             }).catch(() => {
@@ -270,7 +275,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     function showThanksModal(message){
         const prevModalDialog = document.querySelector('.modal__dialog');
-        console.log("STM");
         console.log(message);
 
         //prevModalDialog.classList.remove('show');
@@ -294,5 +298,5 @@ document.addEventListener('DOMContentLoaded', () => {
             closeModal();
         }, 4000);
     }
-    
+    fetch('http://localhost:3000/menu').then(data => data.json()).then(data => console.log(data));
 });
